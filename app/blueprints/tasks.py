@@ -123,16 +123,18 @@ def task_detail(task_id):
 def create():
     form = TaskForm()
     form.category.choices = [(c.name, c.name) for c in Category.query.all()]
+    
+    # 🔥 Достаем цену ТОПа, чтобы передать ее в шаблон (и для проверок) 🔥
+    setting_prem = SiteSetting.query.filter_by(key='premium_price').first()
+    premium_price = int(setting_prem.value) if setting_prem else 100 
+    
     if form.validate_on_submit():
         
         # 🔥 ПРОВЕРКА БАЛАНСА И СПИСАНИЕ ЗА ТОП 🔥
         if form.is_premium.data:
-            setting_prem = SiteSetting.query.filter_by(key='premium_price').first()
-            premium_price = int(setting_prem.value) if setting_prem else 100 
-            
             if current_user.balance < premium_price:
                 flash(f'Недостаточно средств для ТОП-размещения. Нужно {premium_price} ₽ на балансе.', 'error')
-                return render_template('create_task.html', form=form)
+                return render_template('create_task.html', form=form, premium_price=premium_price)
             
             current_user.balance -= premium_price
 
@@ -164,7 +166,9 @@ def create():
             flash('Задача создана!', 'success')
             
         return redirect(url_for('tasks.list_tasks'))
-    return render_template('create_task.html', form=form)
+    
+    # 🔥 Передаем premium_price в HTML-шаблон 🔥
+    return render_template('create_task.html', form=form, premium_price=premium_price)
 
 @tasks_bp.route('/<int:task_id>/send_message', methods=['POST'])
 @login_required
