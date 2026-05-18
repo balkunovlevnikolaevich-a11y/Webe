@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="w-full max-w-5xl mx-auto mt-4 animate-fade-in">
+    
+    <div class="bg-white dark:bg-gray-800 rounded-3xl shadow-lg border border-gray-100 dark:border-gray-700 p-8 md:p-10 mb-8 flex flex-col md:flex-row items-center gap-8 relative overflow-hidden">
+        
+        <div class="absolute inset-0 bg-gradient-to-br from-blue-50/50 to-indigo-50/50 dark:from-blue-950/10 dark:to-indigo-950/10 pointer-events-none"></div>
+
+        <div class="relative z-10 w-32 h-32 md:w-36 md:h-36 rounded-full bg-blue-100 dark:bg-blue-900/50 flex items-center justify-center text-5xl font-black text-blue-600 overflow-hidden shadow-inner border-4 border-white dark:border-gray-800 shrink-0">
+            {% if user.avatar %}
+                <img src="{{ url_for('static', filename='uploads/' + user.avatar) }}" class="w-full h-full object-cover">
+            {% else %}
+                {{ user.username[0]|upper }}
+            {% endif %}
+        </div>
+        
+        <div class="relative z-10 flex-1 text-center md:text-left">
+            <h2 class="text-4xl font-extrabold text-gray-900 dark:text-white tracking-tight mb-3">{{ user.username }}</h2>
+            
+            <div class="flex flex-wrap justify-center md:justify-start items-center gap-4 mb-5">
+                <span class="px-4 py-1.5 bg-gray-100 dark:bg-gray-900 text-gray-700 dark:text-gray-300 rounded-full border border-gray-200 dark:border-gray-700 flex items-center gap-1.5 text-sm font-bold">
+                    <i class="bi bi-star-fill text-blue-500"></i> Всего заказов: {{ user.tasks_created|length + user.tasks_taken|length }}
+                </span>
+
+                <div class="flex items-center gap-2 px-4 py-1.5 bg-yellow-50 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300 rounded-full border border-yellow-200 dark:border-yellow-800 font-bold text-sm">
+                    <div class="flex text-yellow-500 text-xs gap-0.5">
+                        {% for i in range(1, 6) %}
+                            {% if avg_rating >= i %}
+                                <i class="bi bi-star-fill"></i>
+                            {% elif avg_rating >= i - 0.5 %}
+                                <i class="bi bi-star-half"></i>
+                            {% else %}
+                                <i class="bi bi-star"></i>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+                    <span>{{ "%.1f"|format(avg_rating) if avg_rating > 0 else "Нет оценок" }}</span>
+                </div>
+            </div>
+
+            {% if current_user.is_authenticated and current_user.id == user.id %}
+                <a href="{{ url_for('main.edit_profile') }}" class="inline-flex items-center gap-2 px-5 py-2.5 bg-gray-900 dark:bg-gray-700 hover:bg-gray-800 dark:hover:bg-gray-600 text-white font-bold rounded-xl text-sm transition-colors shadow">
+                    <i class="bi bi-pencil-square"></i> Редактировать профиль
+                </a>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div class="lg:col-span-2 space-y-8">
+            <div class="bg-white dark:bg-gray-800 rounded-3xl p-8 shadow-lg border border-gray-100 dark:border-gray-700">
+                <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-5 flex items-center gap-2">
+                    <i class="bi bi-person-vcard text-blue-500"></i> Обо мне
+                </h3>
+                <div class="text-gray-700 dark:text-gray-300 whitespace-pre-wrap leading-relaxed text-[15px] bg-gray-50 dark:bg-gray-900/50 p-6 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-inner">
+                    {% if user.bio %}
+                        {{ user.bio }}
+                    {% else %}
+                        <span class="text-gray-400 dark:text-gray-500 italic">Информация не заполнена.</span>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="bg-white dark:bg-gray-800 rounded-3xl p-8 shadow-lg border border-gray-100 dark:border-gray-700">
+                <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-6">Последние отзывы</h3>
+                <div class="space-y-4">
+                    {% for review in reviews %}
+                        <div class="p-4 bg-gray-50 dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-700">
+                            <div class="flex justify-between items-center mb-2">
+                                <span class="font-bold text-blue-600">{{ review.author.username }}</span>
+                                <div class="flex text-yellow-500 text-xs">
+                                    {% for i in range(review.rating) %}<i class="bi bi-star-fill"></i>{% endfor %}
+                                </div>
+                            </div>
+                            <p class="text-sm text-gray-600 dark:text-gray-400">{{ review.comment }}</p>
+                        </div>
+                    {% else %}
+                        <p class="text-center text-gray-400 py-4">Отзывов пока нет.</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <div class="space-y-8">
+            <div class="bg-white dark:bg-gray-800 rounded-3xl p-8 shadow-lg border border-gray-100 dark:border-gray-700">
+                <h4 class="text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-5 ml-2">Активность</h4>
+                <div class="grid grid-cols-2 gap-4 text-center">
+                    <div class="bg-gray-50 dark:bg-gray-900 p-5 rounded-xl border border-gray-100 dark:border-gray-700 shadow-inner">
+                        <span class="text-3xl font-black text-gray-900 dark:text-white">{{ user.tasks_created|length }}</span>
+                        <span class="block text-xs text-gray-500 dark:text-gray-400 mt-1 uppercase tracking-wider font-medium">Создал</span>
+                    </div>
+                    <div class="bg-gray-50 dark:bg-gray-900 p-5 rounded-xl border border-gray-100 dark:border-gray-700 shadow-inner">
+                        <span class="text-3xl font-black text-purple-600">{{ user.tasks_taken|length }}</span>
+                        <span class="block text-xs text-gray-500 dark:text-gray-400 mt-1 uppercase tracking-wider font-medium">Выполнил</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="w-full max-w-6xl mx-auto mt-4 animate-fade-in">
+    <h2 class="text-3xl md:text-4xl font-black text-gray-900 dark:text-white mb-8 tracking-tight flex items-center gap-3">
+        <i class="bi bi-collection-fill text-blue-600"></i> Мои задачи
+    </h2>
+
+    <div class="mb-8 border-b border-gray-200 dark:border-gray-800">
+        <ul class="flex flex-wrap -mb-px text-sm font-bold text-center" id="taskTabs" role="tablist">
+            <li class="mr-2" role="presentation">
+                <button class="inline-block p-4 border-b-2 border-blue-600 text-blue-600 rounded-t-lg active" id="created-tab" onclick="showTab('created')" type="button">
+                    Я заказчик ({{ created_at_tasks|length }})
+                </button>
+            </li>
+            <li class="mr-2" role="presentation">
+                <button class="inline-block p-4 border-b-2 border-transparent hover:text-gray-600 hover:border-gray-300 dark:hover:text-gray-300 rounded-t-lg" id="taken-tab" onclick="showTab('taken')" type="button">
+                    Я исполнитель ({{ taken_tasks|length }})
+                </button>
+            </li>
+        </ul>
+    </div>
+
+    <div id="tabContent">
+        
+        <div id="created-tasks" class="space-y-4">
+            {% for task in created_at_tasks %}
+            <a href="{{ url_for('tasks.task_detail', task_id=task.id) }}" class="block bg-white dark:bg-gray-800 p-6 rounded-3xl border border-gray-100 dark:border-gray-700 shadow-sm hover:shadow-md transition-all group">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                    <div class="flex-1">
+                        <h3 class="text-xl font-bold text-gray-900 dark:text-white group-hover:text-blue-600 transition-colors">{{ task.title }}</h3>
+                        <div class="flex items-center gap-3 mt-2">
+                            <span class="text-sm font-black text-green-600">{{ task.reward }} ₽</span>
+                            <span class="text-gray-300 dark:text-gray-600">•</span>
+                            <span class="px-2 py-0.5 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 rounded-lg text-[10px] font-bold uppercase tracking-wider">
+                                {{ task.status.value }}
+                            </span>
+                        </div>
+                    </div>
+                    <i class="bi bi-chevron-right text-gray-300 group-hover:translate-x-1 transition-transform"></i>
+                </div>
+            </a>
+            {% else %}
+            <div class="py-12 text-center text-gray-400">
+                <i class="bi bi-plus-circle text-5xl mb-3 opacity-20 block"></i>
+                <p>Вы еще не создали ни одной задачи.</p>
+            </div>
+            {% endfor %}
+        </div>
+
+        <div id="taken-tasks" class="hidden space-y-4">
+            {% for task in taken_tasks %}
+            <a href="{{ url_for('tasks.task_detail', task_id=task.id) }}" class="block bg-white dark:bg-gray-800 p-6 rounded-3xl border border-gray-100 dark:border-gray-700 shadow-sm hover:shadow-md transition-all group">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                    <div class="flex-1">
+                        <h3 class="text-xl font-bold text-gray-900 dark:text-white group-hover:text-purple-600 transition-colors">{{ task.title }}</h3>
+                        <div class="flex items-center gap-3 mt-2">
+                            <span class="text-sm font-black text-green-600">{{ task.reward }} ₽</span>
+                            <span class="text-gray-300 dark:text-gray-600">•</span>
+                            <span class="text-xs text-gray-500">Заказчик: {{ task.customer.username }}</span>
+                        </div>
+                    </div>
+                    <i class="bi bi-chevron-right text-gray-300 group-hover:translate-x-1 transition-transform"></i>
+                </div>
+            </a>
+            {% else %}
+            <div class="py-12 text-center text-gray-400">
+                <i class="bi bi-search text-5xl mb-3 opacity-20 block"></i>
+                <p>У вас пока нет задач в работе.</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<script>
+function showTab(type) {
+    const createdList = document.getElementById('created-tasks');
+    const takenList = document.getElementById('taken-tasks');
+    const createdBtn = document.getElementById('created-tab');
+    const takenBtn = document.getElementById('taken-tab');
+
+    if (type === 'created') {
+        createdList.classList.remove('hidden');
+        takenList.classList.add('hidden');
+        createdBtn.classList.add('border-blue-600', 'text-blue-600');
+        createdBtn.classList.remove('border-transparent');
+        takenBtn.classList.remove('border-blue-600', 'text-blue-600');
+        takenBtn.classList.add('border-transparent');
+    } else {
+        createdList.classList.add('hidden');
+        takenList.classList.remove('hidden');
+        takenBtn.classList.add('border-blue-600', 'text-blue-600');
+        takenBtn.classList.remove('border-transparent');
+        createdBtn.classList.remove('border-blue-600', 'text-blue-600');
+        createdBtn.classList.add('border-transparent');
+    }
+}
+</script>
+
+{% endblock %}

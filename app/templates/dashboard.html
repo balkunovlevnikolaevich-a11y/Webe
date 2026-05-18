@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block content %}
+
+{% if current_user.is_authenticated %}
+    <div class="bg-white dark:bg-gray-800 rounded-3xl shadow-lg hover:shadow-xl transition-shadow duration-300 border border-gray-100 dark:border-gray-700 p-8 mb-8 flex flex-col md:flex-row justify-between items-center gap-6">
+        
+        <div class="flex items-center gap-6">
+            <div class="w-20 h-20 rounded-full bg-blue-100 dark:bg-blue-900/50 flex items-center justify-center text-3xl font-bold text-blue-600 overflow-hidden shadow-inner border-4 border-white dark:border-gray-800">
+                {% if current_user.avatar %}
+                    <img src="{{ url_for('tasks.download_file', filename=current_user.avatar) }}" class="w-full h-full object-cover">
+                {% else %}
+                    {{ current_user.username[0]|upper }}
+                {% endif %}
+            </div>
+            
+            <div>
+                <h2 class="text-3xl font-extrabold text-gray-900 dark:text-white">{{ current_user.username }}</h2>
+                <div class="flex flex-wrap items-center gap-3 mt-3">
+                    <span class="px-4 py-1.5 bg-gradient-to-r from-green-400 to-emerald-500 text-white rounded-full text-sm font-bold shadow-sm">
+                        <i class="bi bi-wallet2"></i> Баланс: {{ current_user.balance }} ₽
+                    </span>
+                    <a href="{{ url_for('main.profile', username=current_user.username) }}" class="text-sm font-bold text-blue-600 hover:underline dark:text-blue-400">
+                        <i class="bi bi-person-lines-fill"></i> Мой публичный профиль
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div>
+            <a href="{{ url_for('main.edit_profile') }}" class="bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-800 dark:text-white font-bold py-3 px-6 rounded-xl transition-colors flex items-center gap-2">
+                <i class="bi bi-gear-fill"></i> Настройки профиля
+            </a>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <a href="{{ url_for('tasks.create') }}" class="flex flex-col items-center justify-center p-8 bg-gradient-to-br from-green-50 to-emerald-50 hover:from-green-100 hover:to-emerald-100 dark:from-green-900/20 dark:to-emerald-900/20 border border-green-200 dark:border-green-800/50 rounded-3xl transition-all duration-300 transform hover:-translate-y-1 shadow-sm hover:shadow-md group">
+            <i class="bi bi-plus-circle-fill text-5xl text-green-500 dark:text-green-400 mb-4 group-hover:scale-110 transition-transform"></i>
+            <span class="text-xl font-bold text-green-800 dark:text-green-300">Создать новую задачу</span>
+        </a>
+        <a href="{{ url_for('tasks.list_tasks') }}" class="flex flex-col items-center justify-center p-8 bg-gradient-to-br from-blue-50 to-indigo-50 hover:from-blue-100 hover:to-indigo-100 dark:from-blue-900/20 dark:to-indigo-900/20 border border-blue-200 dark:border-blue-800/50 rounded-3xl transition-all duration-300 transform hover:-translate-y-1 shadow-sm hover:shadow-md group">
+            <i class="bi bi-search text-5xl text-blue-500 dark:text-blue-400 mb-4 group-hover:scale-110 transition-transform"></i>
+            <span class="text-xl font-bold text-blue-800 dark:text-blue-300">Найти задачу для заработка</span>
+        </a>
+    </div>
+
+{% else %}
+    <div class="bg-yellow-50 dark:bg-yellow-900/30 border-l-4 border-yellow-400 p-4 rounded-md">
+        <p class="text-yellow-700 dark:text-yellow-300">
+            Пожалуйста, <a href="{{ url_for('auth.login') }}" class="font-bold underline">войдите в аккаунт</a>
+        </p>
+    </div>
+{% endif %}
+
+{% endblock %}

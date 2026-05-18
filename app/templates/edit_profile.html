@@ -1,0 +1,194 @@
+{% extends "base.html" %}
+{% block content %}
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.js"></script>
+
+<div class="w-full max-w-3xl mx-auto mt-4 animate-fade-in">
+    <h2 class="text-3xl md:text-4xl font-extrabold text-gray-900 dark:text-white mb-6 flex items-center gap-3 tracking-tight">
+        <i class="bi bi-gear-wide-connected text-blue-600"></i> Настройки профиля
+    </h2>
+    
+    <div class="bg-white dark:bg-gray-800 rounded-3xl shadow-lg border border-gray-100 dark:border-gray-700 p-8 md:p-10">
+        <form method="POST" enctype="multipart/form-data" class="space-y-8" id="profile-form">
+            {{ form.hidden_tag() }}
+            
+            <input type="hidden" name="cropped_avatar" id="cropped_avatar">
+
+            <div class="flex flex-col sm:flex-row items-center gap-6 p-6 bg-gray-50 dark:bg-gray-900/50 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-inner">
+                <div class="relative group">
+                    <div class="w-24 h-24 md:w-28 md:h-28 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center text-4xl font-black text-blue-600 overflow-hidden shadow-lg border-4 border-white dark:border-gray-800">
+                        {% if current_user.avatar %}
+                            <img src="{{ url_for('tasks.download_file', filename=current_user.avatar) }}" class="w-full h-full object-cover" id="current-avatar-preview">
+                        {% else %}
+                            <span id="avatar-placeholder">{{ current_user.username[0]|upper }}</span>
+                            <img src="" class="w-full h-full object-cover hidden" id="current-avatar-preview">
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="flex-1 text-center sm:text-left">
+                    <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider mb-2">Фото профиля</label>
+                    <p class="text-xs text-gray-500 dark:text-gray-400 mb-3">Загрузите новое фото. Мы поможем обрезать его идеально ровно.</p>
+                    {{ form.avatar(class="hidden", id="avatar-input", accept="image/png, image/jpeg, image/jpg") }}
+                    <label for="avatar-input" class="inline-flex items-center gap-2 px-5 py-2.5 bg-white dark:bg-gray-700 text-gray-900 dark:text-white border border-gray-300 dark:border-gray-600 rounded-xl text-sm font-bold cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors shadow-sm">
+                        <i class="bi bi-cloud-upload-fill"></i> Выбрать файл
+                    </label>
+                </div>
+            </div>
+
+            {% set input_class = "mt-2 block w-full px-5 py-3.5 bg-gray-50 dark:bg-gray-900/50 border border-gray-300 dark:border-gray-600 rounded-xl text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all shadow-inner" %}
+            {% set label_class = "block text-sm font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider" %}
+
+            <div>
+                <label class="{{ label_class }}">{{ form.username.label.text }}</label>
+                {{ form.username(class=input_class, placeholder="Ваш никнейм") }}
+            </div>
+            
+            <div>
+                <label class="{{ label_class }}">О себе / Контакты</label>
+                {{ form.about_me(class=input_class, rows="4", placeholder="Напишите немного о себе или оставьте Telegram для связи...") }}
+            </div>
+
+            <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-black text-lg py-4 px-6 rounded-xl shadow-lg shadow-blue-500/20 transform hover:-translate-y-0.5 transition-all duration-300 flex justify-center items-center gap-2">
+                <i class="bi bi-check-circle-fill"></i> Сохранить изменения
+            </button>
+        </form>
+    </div>
+</div>
+
+<div id="cropper-modal" class="fixed inset-0 z-[100] hidden overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+    <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+        <div class="fixed inset-0 transition-opacity bg-black/80 backdrop-blur-sm" aria-hidden="true"></div>
+        
+        <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+        
+        <div class="inline-block overflow-hidden text-left align-bottom transition-all transform bg-white dark:bg-gray-800 rounded-3xl shadow-2xl sm:my-8 sm:align-middle sm:max-w-xl sm:w-full border border-gray-100 dark:border-gray-700">
+            <div class="px-6 pt-6 pb-4 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center">
+                <h3 class="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                    <i class="bi bi-crop text-blue-500"></i> Подгонка фото (ТГ-стайл)
+                </h3>
+                <button type="button" id="close-modal" class="text-gray-400 hover:text-red-500 transition-colors"><i class="bi bi-x-lg text-lg"></i></button>
+            </div>
+            
+            <div class="p-6">
+                <div class="w-full aspect-square bg-gray-100 dark:bg-gray-900 rounded-2xl overflow-hidden border border-gray-200 dark:border-gray-700 shadow-inner mb-6">
+                    <img id="image-to-crop" src="" class="max-w-full block">
+                </div>
+                
+                <div class="grid grid-cols-3 gap-3 mb-6">
+                    <button type="button" onclick="cropper.rotate(-90)" class="px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-white rounded-lg text-sm font-bold hover:bg-gray-200 dark:hover:bg-gray-600"><i class="bi bi-arrow-counterclockwise"></i> Повернуть</button>
+                    <button type="button" onclick="cropper.rotate(90)" class="px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-white rounded-lg text-sm font-bold hover:bg-gray-200 dark:hover:bg-gray-600"><i class="bi bi-arrow-clockwise"></i> Повернуть</button>
+                    <button type="button" onclick="cropper.reset()" class="px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-white rounded-lg text-sm font-bold hover:bg-gray-200 dark:hover:bg-gray-600"><i class="bi bi-arrow-repeat"></i> Сброс</button>
+                </div>
+            </div>
+            
+            <div class="px-6 py-4 bg-gray-50 dark:bg-gray-900/50 border-t border-gray-100 dark:border-gray-700 flex justify-end gap-3 rounded-b-3xl">
+                <button type="button" id="cancel-crop" class="px-5 py-2.5 text-sm font-bold text-gray-700 dark:text-gray-300 hover:text-red-500">Отмена</button>
+                <button type="button" id="apply-crop" class="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-black shadow-md flex items-center gap-1.5"><i class="bi bi-check-lg"></i> Применить</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Делаем область обрезки круглой */
+    .cropper-view-box,
+    .cropper-face {
+        border-radius: 50%;
+        box-shadow: 0 0 0 1px #3b82f6; /* Синий контур */
+    }
+    .cropper-view-box {
+        outline: 0;
+    }
+    /* Затемнение за пределами круга */
+    .cropper-modal {
+        opacity: 0.8;
+        background-color: #000;
+    }
+</style>
+
+<script>
+    let cropper;
+    const avatarInput = document.getElementById('avatar-input');
+    const cropperModal = document.getElementById('cropper-modal');
+    const imageToCrop = document.getElementById('image-to-crop');
+    const croppedAvatarInput = document.getElementById('cropped_avatar');
+    const currentAvatarPreview = document.getElementById('current-avatar-preview');
+    const avatarPlaceholder = document.getElementById('avatar-placeholder');
+    
+    // 1. Обработка выбора файла
+    avatarInput.addEventListener('change', function(e) {
+        const files = e.target.files;
+        if (files && files.length > 0) {
+            const file = files[0];
+            
+            // Проверка формата
+            if(!file.type.startsWith('image/')) {
+                alert('❌ Пожалуйста, выберите изображение.');
+                this.value = '';
+                return;
+            }
+
+            // Читаем файл и открываем модалку
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                imageToCrop.src = e.target.result;
+                cropperModal.classList.remove('hidden');
+                
+                // Инициализация Cropper.js
+                if (cropper) { cropper.destroy(); } // Уничтожаем старый, если есть
+                cropper = new Cropper(imageToCrop, {
+                    aspectRatio: 1, // Строго квадрат
+                    viewMode: 1, // Не выходить за пределы картинки
+                    dragMode: 'move', // Мышкой двигаем картинку
+                    guides: false, // Убираем сетку
+                    center: true,
+                    highlight: false,
+                    cropBoxMovable: false, // Контур обрезки не двигаем
+                    cropBoxResizable: false, // Контур не ресайзим
+                    toggleDragModeOnDblclick: false,
+                    autoCropArea: 0.8, // Размер круга по умолчанию
+                });
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+
+    // 2. Закрытие модалки (Отмена)
+    const closeModal = () => {
+        cropperModal.classList.add('hidden');
+        avatarInput.value = ''; // Сбрасываем выбор файла
+        if (cropper) { cropper.destroy(); }
+    };
+    document.getElementById('close-modal').addEventListener('click', closeModal);
+    document.getElementById('cancel-crop').addEventListener('click', closeModal);
+
+    // 3. Применение обрезки
+    document.getElementById('apply-crop').addEventListener('click', function() {
+        if (!cropper) return;
+
+        // Получаем обрезанное изображение в хорошем качестве (круг)
+        const canvas = cropper.getCroppedCanvas({
+            width: 400, // Финальный размер
+            height: 400,
+            imageSmoothingEnabled: true,
+            imageSmoothingQuality: 'high',
+        });
+
+        // Конвертируем в Base64
+        const base64Image = canvas.toDataURL('image/jpeg', 0.9);
+
+        // Записываем в скрытое поле для отправки на сервер
+        croppedAvatarInput.value = base64Image;
+
+        // Обновляем превью на странице
+        currentAvatarPreview.src = base64Image;
+        currentAvatarPreview.classList.remove('hidden');
+        if(avatarPlaceholder) { avatarPlaceholder.classList.add('hidden'); }
+
+        // Закрываем модалку
+        cropperModal.classList.add('hidden');
+        if (cropper) { cropper.destroy(); }
+    });
+</script>
+{% endblock %}

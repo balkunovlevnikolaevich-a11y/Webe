@@ -1,0 +1,137 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="w-full mx-auto mt-4 animate-fade-in">
+    <h2 class="text-3xl md:text-4xl font-extrabold text-gray-900 dark:text-white mb-6 flex items-center gap-3">
+        <i class="bi bi-plus-square-dotted text-blue-600"></i> Создать задачу
+    </h2>
+    
+    <div class="bg-white dark:bg-gray-800 rounded-3xl shadow-lg border border-gray-100 dark:border-gray-700 p-8 md:p-12">
+        <form method="POST" enctype="multipart/form-data" class="space-y-8">
+            {{ form.hidden_tag() }}
+            
+            {% set input_class = "mt-2 block w-full px-5 py-4 bg-gray-50 dark:bg-gray-900/50 border border-gray-300 dark:border-gray-600 rounded-2xl text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-lg" %}
+            {% set label_class = "block text-sm font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wide" %}
+
+            <div>
+                <label class="{{ label_class }}">{{ form.title.label.text }}</label>
+                {{ form.title(class=input_class, placeholder="Например: Сделать дизайн логотипа") }}
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div>
+                    <label class="{{ label_class }}">{{ form.category.label.text }}</label>
+                    {{ form.category(class=input_class) }}
+                </div>
+                <div>
+                    <label class="{{ label_class }}">{{ form.reward.label.text }}</label>
+                    <div class="relative mt-2">
+                        {{ form.reward(class="block w-full px-5 py-4 bg-gray-50 dark:bg-gray-900/50 border border-gray-300 dark:border-gray-600 rounded-2xl text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-green-500 transition-all text-lg font-bold text-green-600 dark:text-green-400") }}
+                        <div class="absolute inset-y-0 right-0 pr-5 flex items-center pointer-events-none">
+                            <span class="text-gray-500 font-bold">₽</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div>
+                <div class="flex justify-between items-end mb-2">
+                    <label class="{{ label_class }} mb-0">{{ form.description.label.text }}</label>
+                    <button type="button" class="text-sm flex items-center gap-2 bg-gradient-to-r from-purple-100 to-fuchsia-100 hover:from-purple-200 hover:to-fuchsia-200 text-purple-700 dark:from-purple-900/30 dark:to-fuchsia-900/30 dark:text-purple-300 px-4 py-2 rounded-xl transition-colors font-bold shadow-sm" onclick="generateAI()">
+                        <i class="bi bi-magic"></i> Спросить Gemini
+                    </button>
+                </div>
+                {{ form.description(class=input_class, rows="6", placeholder="Подробно опишите, что нужно сделать...") }}
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center border-t border-gray-100 dark:border-gray-700 pt-8">
+                
+                <div class="space-y-4">
+                    <div class="p-4 bg-blue-50 dark:bg-blue-900/10 border border-blue-200 dark:border-blue-800 rounded-2xl">
+                        <label class="{{ label_class }} mb-2 text-blue-700 dark:text-blue-400">
+                            <i class="bi bi-image"></i> {{ form.cover_image.label.text }}
+                        </label>
+                        <p class="text-xs text-blue-600 dark:text-blue-500 mb-2">Фото для витрины. Строго горизонтальное (от 5:4 до 16:9).</p>
+                        {{ form.cover_image(class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-bold file:bg-blue-600 file:text-white hover:file:bg-blue-700 transition-all cursor-pointer") }}
+                    </div>
+
+                    <div class="p-4 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-2xl">
+                        <label class="{{ label_class }} mb-2">
+                            <i class="bi bi-file-earmark-text"></i> {{ form.file.label.text }}
+                        </label>
+                        <p class="text-xs text-gray-500 mb-2">Оригинальный файл. Его можно будет распознать ИИ.</p>
+                        {{ form.file(class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-bold file:bg-gray-200 file:text-gray-800 dark:file:bg-gray-700 dark:file:text-white hover:file:bg-gray-300 transition-all cursor-pointer") }}
+                    </div>
+                </div>
+
+                <div class="bg-gradient-to-br from-yellow-50 to-orange-50 dark:from-yellow-900/20 dark:to-orange-900/20 border-2 border-yellow-400 dark:border-yellow-600 rounded-2xl p-6 flex flex-col sm:flex-row items-center sm:items-start gap-4 shadow-sm h-full justify-center">
+                    <div class="pt-1">
+                        {{ form.is_premium(class="w-8 h-8 text-yellow-600 bg-white border-gray-300 rounded-lg focus:ring-yellow-500 dark:focus:ring-yellow-600 focus:ring-2 dark:bg-gray-800 dark:border-gray-600 cursor-pointer") }}
+                    </div>
+                    <div>
+                        <label for="is_premium" class="text-lg font-black text-gray-900 dark:text-white cursor-pointer select-none block mb-1">
+                            Выделить задачу (Сделать ТОП за {{ vip_price }} ₽)
+                        </label>
+                        <span class="block text-sm text-gray-600 dark:text-gray-400 font-medium">Ваша карточка станет <b class="text-yellow-600 dark:text-yellow-400">в 2 раза больше</b>, получит премиум-дизайн и закрепится в ТОПе!</span>
+                    </div>
+                </div>
+            </div>
+
+            <button type="submit" class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-black text-lg py-5 px-6 rounded-2xl shadow-lg transform hover:-translate-y-1 active:scale-95 transition-all duration-300 mt-4 flex justify-center items-center gap-2">
+                <i class="bi bi-send-fill"></i> Опубликовать задачу
+            </button>
+        </form>
+    </div>
+</div>
+
+<script>
+// --- 1. ГЕНЕРАЦИЯ ОПИСАНИЯ ЧЕРЕЗ ИИ ---
+function generateAI() {
+    const prompt = document.querySelector('input[name="title"]').value || "Общая задача";
+    const descField = document.querySelector('textarea[name="description"]');
+    const oldText = descField.value;
+    descField.value = "Gemini думает... ⏳";
+    
+    fetch('/tasks/ai_generate', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+        body: 'prompt=' + encodeURIComponent(prompt)
+    })
+    .then(r => r.json())
+    .then(data => { descField.value = data.description; })
+    .catch(err => { descField.value = oldText; alert("Ошибка при обращении к ИИ"); });
+}
+
+// --- 2. ЖЕСТКАЯ ПРОВЕРКА ФОРМАТА И ПРОПОРЦИЙ ФОТО ---
+document.addEventListener('DOMContentLoaded', function() {
+    const coverInput = document.querySelector('input[name="cover_image"]');
+    
+    if (coverInput) {
+        coverInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            // Проверка 1: Формат файла
+            const validTypes = ['image/jpeg', 'image/png', 'image/jpg'];
+            if (!validTypes.includes(file.type)) {
+                alert('❌ Ошибка: Обложка должна быть картинкой в формате JPG или PNG!');
+                this.value = ''; // Строго сбрасываем файл
+                return;
+            }
+
+            // Проверка 2: Строгие пропорции картинки
+            const img = new Image();
+            img.onload = function() {
+                const ratio = this.width / this.height;
+                
+                // Идеальные горизонтальные пропорции: от 1.2 (чуть шире квадрата, 5:4) до 1.8 (формат 16:9)
+                if (ratio < 1.2 || ratio > 1.8) {
+                    alert("⛔ Ошибка формата!\n\nФотография имеет неправильные пропорции.\nПожалуйста, загрузите стандартное горизонтальное фото (например, 4:3 или 16:9).\n\nВертикальные (селфи), квадратные или слишком узкие фото не допускаются, так как они ломают дизайн витрины.");
+                    coverInput.value = ''; // ЖЕСТКО СБРАСЫВАЕМ ВЫБОР
+                }
+            };
+            img.src = URL.createObjectURL(file);
+        });
+    }
+});
+</script>
+{% endblock %}

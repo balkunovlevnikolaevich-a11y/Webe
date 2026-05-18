@@ -1,0 +1,210 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="flex flex-col md:flex-row gap-8 animate-fade-in mt-4">
+    
+    <aside class="w-full md:w-64 bg-white dark:bg-gray-800 rounded-3xl p-6 shadow-lg border border-gray-100 dark:border-gray-700 h-fit sticky top-24">
+        <h3 class="text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-6 ml-3">Управление</h3>
+        <nav class="space-y-2">
+            <button onclick="switchTab('overview', this)" class="admin-tab w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors bg-blue-50 dark:bg-blue-900/50 text-blue-700 dark:text-blue-200 font-bold">
+                <i class="bi bi-speedometer2 text-lg"></i> Обзор
+            </button>
+            <button onclick="switchTab('tasks', this)" class="admin-tab w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-blue-600 font-medium">
+                <i class="bi bi-list-task text-lg"></i> Все задачи
+            </button>
+            <button onclick="switchTab('users', this)" class="admin-tab w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-blue-600 font-medium">
+                <i class="bi bi-people-fill text-lg"></i> Пользователи
+            </button>
+            <button onclick="switchTab('pricing', this)" class="admin-tab w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-blue-600 font-medium">
+                <i class="bi bi-currency-dollar text-lg"></i> Ценовая политика
+            </button>
+            <button onclick="switchTab('support', this)" class="admin-tab w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-blue-600 font-medium">
+                <i class="bi bi-headset text-lg"></i> Поддержка
+            </button>
+        </nav>
+    </aside>
+
+    <main class="flex-1 space-y-8">
+        <div class="bg-white dark:bg-gray-800 rounded-3xl p-8 shadow-lg border border-gray-100 dark:border-gray-700">
+            <h1 class="text-3xl md:text-4xl font-extrabold text-gray-900 dark:text-white mb-2 tracking-tight">Панель администратора</h1>
+            <p class="text-gray-600 dark:text-gray-400 text-lg">Добро пожаловать, <span class="font-bold text-blue-600">{{ current_user.username }}</span>. Управляйте платформой с умом.</p>
+        </div>
+
+        <div id="tab-overview" class="tab-content block">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div class="bg-white dark:bg-gray-800 p-6 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm hover:shadow-md transition-shadow">
+                    <div class="flex justify-between items-start mb-4">
+                        <div class="w-12 h-12 bg-blue-100 dark:bg-blue-900/50 rounded-xl flex items-center justify-center text-blue-600 dark:text-blue-400 text-2xl">
+                            <i class="bi bi-people-fill"></i>
+                        </div>
+                    </div>
+                    <p class="text-xs text-gray-400 dark:text-gray-500 uppercase tracking-wider font-bold mb-1">Всего пользователей</p>
+                    <p class="text-4xl font-black text-gray-900 dark:text-white">{{ users_count }}</p>
+                </div>
+
+                <div class="bg-white dark:bg-gray-800 p-6 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm hover:shadow-md transition-shadow">
+                    <div class="flex justify-between items-start mb-4">
+                        <div class="w-12 h-12 bg-purple-100 dark:bg-purple-900/50 rounded-xl flex items-center justify-center text-purple-600 dark:text-purple-400 text-2xl">
+                            <i class="bi bi-list-check"></i>
+                        </div>
+                    </div>
+                    <p class="text-xs text-gray-400 dark:text-gray-500 uppercase tracking-wider font-bold mb-1">Задач в работе</p>
+                    <p class="text-4xl font-black text-gray-900 dark:text-white">{{ active_tasks_count }}</p>
+                </div>
+                
+                <div class="bg-white dark:bg-gray-800 p-6 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm hover:shadow-md transition-shadow">
+                    <div class="flex justify-between items-start mb-4">
+                        <div class="w-12 h-12 bg-emerald-100 dark:bg-emerald-900/50 rounded-xl flex items-center justify-center text-emerald-600 dark:text-emerald-400 text-2xl">
+                            <i class="bi bi-cash-stack"></i>
+                        </div>
+                    </div>
+                    <p class="text-xs text-gray-400 dark:text-gray-500 uppercase tracking-wider font-bold mb-1">Оборот средств (₽)</p>
+                    <p class="text-4xl font-black text-gray-900 dark:text-white">{{ total_turnover }}</p>
+                </div>
+            </div>
+        </div>
+
+        <div id="tab-tasks" class="tab-content hidden">
+            <div class="bg-white dark:bg-gray-800 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden p-6">
+                <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-4">Все задачи платформы</h3>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-sm text-gray-600 dark:text-gray-400">
+                        <thead class="text-xs uppercase bg-gray-50 dark:bg-gray-900/50">
+                            <tr>
+                                <th class="px-4 py-3">Название</th>
+                                <th class="px-4 py-3">Статус</th>
+                                <th class="px-4 py-3">Действия</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
+                            {% for t in tasks %}
+                            <tr>
+                                <td class="px-4 py-3 font-bold text-gray-900 dark:text-white">{{ t.title }}</td>
+                                <td class="px-4 py-3">{{ t.status.value }}</td>
+                                <td class="px-4 py-3 flex gap-2">
+                                    <a href="{{ url_for('tasks.task_detail', task_id=t.id) }}" class="px-3 py-1 bg-blue-100 text-blue-700 hover:bg-blue-200 rounded-lg text-xs font-bold transition-colors">Смотреть</a>
+                                    {% if t.status.value != 'Архив' %}
+                                    <a href="{{ url_for('tasks.admin_cancel_task', task_id=t.id) }}" class="px-3 py-1 bg-red-100 text-red-700 hover:bg-red-200 rounded-lg text-xs font-bold transition-colors">Отменить</a>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div id="tab-users" class="tab-content hidden">
+            <div class="bg-white dark:bg-gray-800 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden p-6">
+                <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-4">База пользователей</h3>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-sm text-gray-600 dark:text-gray-400">
+                        <thead class="text-xs uppercase bg-gray-50 dark:bg-gray-900/50">
+                            <tr>
+                                <th class="px-4 py-3">ID</th>
+                                <th class="px-4 py-3">Логин</th>
+                                <th class="px-4 py-3">Баланс</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
+                            {% for u in users %}
+                            <tr>
+                                <td class="px-4 py-3">#{{ u.id }}</td>
+                                <td class="px-4 py-3 font-bold text-gray-900 dark:text-white">{{ u.username }}</td>
+                                <td class="px-4 py-3 text-green-500 font-bold">{{ u.balance }} ₽</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div id="tab-pricing" class="tab-content hidden">
+            <div class="bg-white dark:bg-gray-800 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-700 p-8">
+                <h3 class="text-2xl font-bold text-gray-900 dark:text-white mb-2"><i class="bi bi-gear-fill text-blue-500 mr-2"></i>Настройка системы</h3>
+                <p class="text-gray-500 text-sm mb-6">Установите системные комиссии и стоимость услуг.</p>
+                <form method="POST" action="{{ url_for('tasks.admin_panel') }}" class="max-w-md">
+                    
+                    <div class="mb-6">
+                        <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Цена OCR (расшифровка ТЗ)</label>
+                        <div class="relative">
+                            <input type="number" name="ocr_price" value="{{ current_ocr_price }}" required
+                                class="w-full pl-4 pr-10 py-3 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl font-bold text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none">
+                            <span class="absolute right-4 top-3.5 text-gray-400 font-bold">₽ / лист</span>
+                        </div>
+                    </div>
+
+                    <div class="mb-6">
+                        <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Цена "ТОП-задачи" (Премиум)</label>
+                        <div class="relative">
+                            <input type="number" name="premium_price" value="{{ current_premium_price }}" required
+                                class="w-full pl-4 pr-10 py-3 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl font-bold text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none">
+                            <span class="absolute right-4 top-3.5 text-gray-400 font-bold">₽</span>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-md transition-all">
+                        Сохранить изменения
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <div id="tab-support" class="tab-content hidden">
+            <div class="bg-white dark:bg-gray-800 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-700 p-8">
+                <h3 class="text-2xl font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
+                    <i class="bi bi-inboxes text-blue-500"></i> Тикеты поддержки
+                </h3>
+                <div class="space-y-4">
+                    {% for ticket in tickets %}
+                    <div class="bg-gray-50 dark:bg-gray-900/50 p-5 rounded-2xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border border-gray-200 dark:border-gray-700">
+                        <div>
+                            <div class="flex items-center gap-2 mb-1">
+                                <span class="px-2 py-0.5 bg-red-100 text-red-600 rounded text-[10px] font-black uppercase">Жалоба</span>
+                                <span class="text-sm font-bold text-gray-900 dark:text-white">От: {{ ticket.user.username }}</span>
+                            </div>
+                            <p class="text-sm text-gray-600 dark:text-gray-400">
+                                Проблема в задаче: <a href="{{ url_for('tasks.task_detail', task_id=ticket.task_id) }}" class="text-blue-500 hover:underline font-bold">#{{ ticket.task_id }}</a>
+                            </p>
+                            <p class="text-xs text-gray-400 mt-2"><i class="bi bi-clock"></i> {{ ticket.created_at.strftime('%Y-%m-%d %H:%M') }}</p>
+                        </div>
+                        <a href="{{ url_for('tasks.admin_close_ticket', ticket_id=ticket.id) }}" class="px-4 py-2 bg-green-500 hover:bg-green-600 text-white text-sm font-bold rounded-xl transition-colors shadow-sm whitespace-nowrap">
+                            Отметить решенным
+                        </a>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-12">
+                        <i class="bi bi-emoji-smile text-5xl text-gray-300 dark:text-gray-600 mb-3 block"></i>
+                        <p class="text-gray-500 dark:text-gray-400 font-medium">Нет новых обращений. Все счастливы!</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+    </main>
+</div>
+
+<script>
+function switchTab(tabId, clickedButton) {
+    document.querySelectorAll('.tab-content').forEach(tab => {
+        tab.classList.remove('block');
+        tab.classList.add('hidden');
+    });
+    
+    document.querySelectorAll('.admin-tab').forEach(btn => {
+        btn.classList.remove('bg-blue-50', 'dark:bg-blue-900/50', 'text-blue-700', 'dark:text-blue-200', 'font-bold');
+        btn.classList.add('text-gray-700', 'dark:text-gray-300', 'hover:bg-gray-100', 'dark:hover:bg-gray-700', 'font-medium');
+    });
+
+    document.getElementById('tab-' + tabId).classList.remove('hidden');
+    document.getElementById('tab-' + tabId).classList.add('block');
+
+    clickedButton.classList.remove('text-gray-700', 'dark:text-gray-300', 'hover:bg-gray-100', 'dark:hover:bg-gray-700', 'font-medium');
+    clickedButton.classList.add('bg-blue-50', 'dark:bg-blue-900/50', 'text-blue-700', 'dark:text-blue-200', 'font-bold');
+}
+</script>
+
+{% endblock %}

@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="ru" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prochekt_Web</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'ui-sans-serif', 'system-ui', '-apple-system', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <style>
+        /* Скрываем стандартный скроллбар */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #0a0a0c; }
+        ::-webkit-scrollbar-thumb { background: #374151; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #4b5563; }
+        
+        /* Плавное появление страниц */
+        .animate-fade-in {
+            animation: fadeIn 0.4s ease-out forwards;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 dark:bg-[#0a0a0c] text-gray-900 dark:text-gray-100 min-h-screen flex flex-col font-sans transition-colors duration-300">
+
+    <nav class="bg-white/80 dark:bg-[#0a0a0c]/80 border-b border-gray-200 dark:border-gray-800/80 px-6 py-4 flex justify-between items-center sticky top-0 z-50 backdrop-blur-lg transition-all duration-300">
+        
+        <a href="{{ url_for('main.index') }}" class="flex items-center gap-2 group">
+            <i class="bi bi-briefcase-fill text-gray-800 dark:text-white group-hover:text-blue-500 group-hover:scale-110 transition-all duration-300 text-xl"></i>
+            <span class="text-xl font-extrabold text-gray-900 dark:text-white group-hover:text-blue-500 transition-colors duration-300 tracking-tight">Prochekt_Web</span>
+        </a>
+
+        <div class="hidden md:flex gap-8 items-center">
+            <a href="{{ url_for('tasks.list_tasks') }}" class="relative group text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-white transition-colors font-bold text-sm uppercase tracking-wide">
+                Биржа задач
+                <span class="absolute -bottom-1.5 left-0 w-0 h-0.5 bg-blue-500 transition-all duration-300 group-hover:w-full"></span>
+            </a>
+            
+            <a href="{{ url_for('tasks.my_tasks') }}" class="relative group text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-white transition-colors font-bold text-sm uppercase tracking-wide">
+                Мои задачи
+                <span class="absolute -bottom-1.5 left-0 w-0 h-0.5 bg-blue-500 transition-all duration-300 group-hover:w-full"></span>
+            </a>
+
+            {% if current_user.is_authenticated and current_user.username|lower == 'admin' %}
+            <a href="{{ url_for('tasks.admin_panel') }}" class="relative group text-yellow-500 hover:text-yellow-400 transition-colors font-bold text-sm uppercase tracking-wide flex items-center gap-1.5">
+                <i class="bi bi-shield-lock-fill text-sm animate-pulse"></i> Админ панель
+                <span class="absolute -bottom-1.5 left-0 w-0 h-0.5 bg-yellow-500 transition-all duration-300 group-hover:w-full"></span>
+            </a>
+            {% endif %}
+        </div>
+
+        <div class="flex items-center gap-6">
+            {% if current_user.is_authenticated %}
+                <a href="{{ url_for('main.dashboard') }}" class="relative group text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-white transition-colors font-bold text-sm">
+                    Кабинет
+                    <span class="absolute -bottom-1.5 left-0 w-0 h-0.5 bg-blue-500 transition-all duration-300 group-hover:w-full"></span>
+                </a>
+                
+                <a href="{{ url_for('auth.logout') }}" class="text-red-500 dark:text-red-400 hover:text-red-600 dark:hover:text-red-300 hover:drop-shadow-[0_0_8px_rgba(248,113,113,0.8)] transition-all duration-300 font-bold text-sm">
+                    Выйти
+                </a>
+            {% else %}
+                <a href="{{ url_for('auth.login') }}" class="relative group text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-white transition-colors font-bold text-sm">
+                    Войти
+                    <span class="absolute -bottom-1.5 left-0 w-0 h-0.5 bg-blue-500 transition-all duration-300 group-hover:w-full"></span>
+                </a>
+            {% endif %}
+
+            <button id="theme-toggle" class="text-yellow-500 hover:text-yellow-400 hover:rotate-12 hover:scale-110 transition-all duration-300 text-lg flex items-center justify-center p-1" title="Сменить тему">
+                <i class="bi bi-moon-fill" id="theme-icon"></i>
+            </button>
+        </div>
+    </nav>
+
+    <div class="container mx-auto px-4 mt-6">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="p-4 mb-4 text-sm rounded-xl font-bold flex items-center gap-2 shadow-sm animate-fade-in {% if category == 'error' %}bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300 border border-red-200 dark:border-red-800/50{% else %}bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300 border border-blue-200 dark:border-blue-800/50{% endif %}">
+                        <i class="bi {% if category == 'error' %}bi-exclamation-triangle-fill{% else %}bi-info-circle-fill{% endif %} text-lg"></i>
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+    </div>
+
+    <main class="flex-grow container mx-auto px-4 py-8 max-w-7xl relative z-10">
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer class="mt-auto py-8 text-center text-gray-500 dark:text-gray-400 text-sm border-t border-gray-200 dark:border-gray-800/80 bg-white/50 dark:bg-[#0a0a0c]/50 backdrop-blur-md relative z-10">
+        <div class="flex justify-center items-center gap-2 mb-2">
+            <i class="bi bi-briefcase-fill text-blue-500"></i>
+            <span class="font-bold text-gray-700 dark:text-gray-300">Prochekt_Web</span>
+        </div>
+        <p>© 2026 Все права защищены. Разработано с умом.</p>
+    </footer>
+
+    <script>
+        const themeToggleBtn = document.getElementById('theme-toggle');
+        const themeIcon = document.getElementById('theme-icon');
+        const html = document.documentElement;
+
+        if (localStorage.getItem('theme') === 'light') {
+            html.classList.remove('dark');
+            themeIcon.classList.replace('bi-moon-fill', 'bi-sun-fill');
+        } else {
+            html.classList.add('dark');
+        }
+
+        themeToggleBtn.addEventListener('click', function() {
+            html.classList.toggle('dark');
+            if (html.classList.contains('dark')) {
+                localStorage.setItem('theme', 'dark');
+                themeIcon.classList.replace('bi-sun-fill', 'bi-moon-fill');
+            } else {
+                localStorage.setItem('theme', 'light');
+                themeIcon.classList.replace('bi-moon-fill', 'bi-sun-fill');
+            }
+        });
+    </script>
+</body>
+</html>
