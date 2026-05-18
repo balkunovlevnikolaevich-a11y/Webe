@@ -1,8 +1,8 @@
+import os
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
 from flask_migrate import Migrate
-import os
 
 db = SQLAlchemy()
 login_manager = LoginManager()
@@ -12,8 +12,17 @@ def create_app():
     app = Flask(__name__)
     
     # Базовая конфигурация
-    app.config['SECRET_KEY'] = 'dev-key-123'
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///app.db'
+    app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY') or 'dev-key-123'
+    
+    # 🔥 БЛОК ПОДКЛЮЧЕНИЯ К БАЗЕ ДАННЫХ 🔥
+    # Пытаемся получить ссылку на облачную БД (Neon). Если её нет — используем локальный SQLite
+    database_url = os.environ.get('DATABASE_URL') or 'sqlite:///app.db'
+    
+    # Исправляем старый префикс postgres:// на новый postgresql:// для SQLAlchemy (иначе будет ошибка)
+    if database_url.startswith("postgres://"):
+        database_url = database_url.replace("postgres://", "postgresql://", 1)
+        
+    app.config['SQLALCHEMY_DATABASE_URI'] = database_url
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     app.config['UPLOAD_FOLDER'] = os.path.join(app.root_path, 'static/uploads')
 
