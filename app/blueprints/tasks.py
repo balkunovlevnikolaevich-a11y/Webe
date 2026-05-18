@@ -124,9 +124,12 @@ def create():
     form = TaskForm()
     form.category.choices = [(c.name, c.name) for c in Category.query.all()]
     
-    # 🔥 Достаем цену ТОПа, чтобы передать ее в шаблон (и для проверок) 🔥
+    # 🔥 Достаем цену ТОПа безопасно (с защитой от пустых значений) 🔥
     setting_prem = SiteSetting.query.filter_by(key='premium_price').first()
-    premium_price = int(setting_prem.value) if setting_prem else 100 
+    try:
+        premium_price = int(setting_prem.value) if setting_prem and setting_prem.value else 100 
+    except (ValueError, TypeError):
+        premium_price = 100
     
     if form.validate_on_submit():
         
@@ -134,6 +137,7 @@ def create():
         if form.is_premium.data:
             if current_user.balance < premium_price:
                 flash(f'Недостаточно средств для ТОП-размещения. Нужно {premium_price} ₽ на балансе.', 'error')
+                # 🔥 ИСПРАВЛЕНИЕ: Обязательно передаем premium_price при ошибке и перезагрузке формы! 🔥
                 return render_template('create_task.html', form=form, premium_price=premium_price)
             
             current_user.balance -= premium_price
@@ -167,7 +171,7 @@ def create():
             
         return redirect(url_for('tasks.list_tasks'))
     
-    # 🔥 Передаем premium_price в HTML-шаблон 🔥
+    # 🔥 Передаем premium_price при первой загрузке страницы 🔥
     return render_template('create_task.html', form=form, premium_price=premium_price)
 
 @tasks_bp.route('/<int:task_id>/send_message', methods=['POST'])
