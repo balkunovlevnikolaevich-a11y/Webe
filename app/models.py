@@ -14,13 +14,16 @@ class TaskStatus(enum.Enum):
 class User(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(80), unique=True, nullable=False)
-    password = db.Column(db.String(200), nullable=False)
+    # 🔥 Меняем на Text, чтобы хэш любой длины точно поместился
+    password = db.Column(db.Text, nullable=False)
     balance = db.Column(db.Integer, default=0)
     avatar = db.Column(db.String(200))
     bio = db.Column(db.Text)
     
     def set_password(self, password):
-        self.password = generate_password_hash(password)
+        # 🔥 Жестко задаем проверенный алгоритм шифрования
+        self.password = generate_password_hash(password, method='pbkdf2:sha256')
+        
     def check_password(self, password):
         return check_password_hash(self.password, password)
     
@@ -72,7 +75,6 @@ class SiteSetting(db.Model):
     key = db.Column(db.String(50), unique=True, nullable=False)
     value = db.Column(db.String(200))
 
-# 🔥 НОВАЯ ТАБЛИЦА ДЛЯ ПОДДЕРЖКИ 🔥
 class Ticket(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
@@ -82,3 +84,4 @@ class Ticket(db.Model):
 
     user = db.relationship('User', backref='tickets')
     task = db.relationship('Task', backref='tickets')
+    
